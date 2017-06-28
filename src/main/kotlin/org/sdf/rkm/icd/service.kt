@@ -1,4 +1,4 @@
-package com.epatientfinder.icd
+package org.sdf.rkm.icd
 
 import com.google.cloud.bigquery.*
 import org.springframework.stereotype.Service

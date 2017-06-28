@@ -1,4 +1,4 @@
-package com.epatientfinder.icd
+package org.sdf.rkm.icd
 
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController

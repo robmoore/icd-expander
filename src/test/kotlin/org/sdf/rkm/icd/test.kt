@@ -1,4 +1,4 @@
-package com.epatientfinder.icd
+package org.sdf.rkm.icd
 
 import org.junit.Test
 import org.junit.runner.RunWith

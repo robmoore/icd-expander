@@ -54,3 +54,8 @@ compileTestKotlin {
 task wrapper(type: Wrapper) {
     gradleVersion = '4.0'
 }
+
+springBoot {
+    mainClass = 'com.epatientfinder.icd.ApplicationKt'
+}
+

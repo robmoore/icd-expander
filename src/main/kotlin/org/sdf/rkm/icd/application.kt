@@ -1,4 +1,4 @@
-package com.epatientfinder.icd
+package org.sdf.rkm.icd
 
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
