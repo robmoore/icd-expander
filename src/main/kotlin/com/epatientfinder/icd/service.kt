@@ -7,13 +7,13 @@ import java.util.UUID
 
 @Service
 class Service {
-    fun expandIcds(icd: String): List<String> {
+    fun expandIcds(icd: String): Set<String> {
         val normalizedIcd = icd.replace(".", "")
         return runStandardSqlQuery("SELECT ICD FROM `AS_Sample.icd*` WHERE ICD LIKE '$normalizedIcd%'")
     }
 
     @Throws(TimeoutException::class, InterruptedException::class)
-    private fun runQuery(queryConfig: QueryJobConfiguration): List<String> {
+    private fun runQuery(queryConfig: QueryJobConfiguration): Set<String> {
         val bigquery = BigQueryOptions.getDefaultInstance().service
 
         // Create a job ID so that we can safely retry.
@@ -39,15 +39,21 @@ class Service {
         // Print all pages of the results.
         val results = mutableListOf<String>()
         while (result != null) {
-            results.addAll(result.iterateAll().map { it[0].stringValue })
+            results.addAll(result.iterateAll().map { insertDecimal(it[0].stringValue) })
             result = result.nextPage
         }
 
-        return results
+        return results.sorted().toSet()
+    }
+
+    private fun insertDecimal(icd: String): String {
+        return if (icd.length > 3) {
+            "${icd.substring(0..2)}.${icd.substring(3)}"
+        } else icd
     }
 
     @Throws(TimeoutException::class, InterruptedException::class)
-    private fun runStandardSqlQuery(queryString: String): List<String> {
+    private fun runStandardSqlQuery(queryString: String): Set<String> {
         val queryConfig = QueryJobConfiguration.newBuilder(queryString)
                 .setUseLegacySql(false)
                 .build()
