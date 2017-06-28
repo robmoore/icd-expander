@@ -9,7 +9,7 @@ import java.util.UUID
 class Service {
     fun expandIcds(icd: String): List<String> {
         val normalizedIcd = icd.replace(".", "")
-        return runStandardSqlQuery("SELECT ICD FROM `AS_Sample.icd*` WHERE ICD LIKE '$normalizedIcd'")
+        return runStandardSqlQuery("SELECT ICD FROM `AS_Sample.icd*` WHERE ICD LIKE '$normalizedIcd%'")
     }
 
     @Throws(TimeoutException::class, InterruptedException::class)
