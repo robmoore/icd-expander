@@ -9,7 +9,7 @@ import java.util.UUID
 class Service {
     fun expandIcds(icd: String): Set<String> {
         val normalizedIcd = icd.replace(".", "")
-        return runStandardSqlQuery("SELECT ICD FROM `AS_Sample.icd*` WHERE ICD LIKE '$normalizedIcd%'")
+        return runStandardSqlQuery("SELECT DISTINCT(ICD) FROM `AS_Sample.icd*` WHERE ICD LIKE '$normalizedIcd%' ORDER BY ICD")
     }
 
     @Throws(TimeoutException::class, InterruptedException::class)
@@ -43,7 +43,7 @@ class Service {
             result = result.nextPage
         }
 
-        return results.sorted().toSet()
+        return results.toSet()
     }
 
     private fun insertDecimal(icd: String): String {
