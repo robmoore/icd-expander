@@ -9,7 +9,8 @@ import java.util.UUID
 class Service {
     fun expandIcds(icd: String): Set<String> {
         val normalizedIcd = icd.replace(".", "")
-        return runStandardSqlQuery("SELECT DISTINCT(ICD) FROM `AS_Sample.icd*` WHERE ICD LIKE '$normalizedIcd%' ORDER BY ICD")
+        // TODO Add ICD10 support
+        return runStandardSqlQuery("SELECT DIAGNOSIS_CODE FROM `bigquery-public-data.cms_codes.icd9_diagnoses` WHERE DIAGNOSIS_CODE LIKE '$normalizedIcd%' ORDER BY DIAGNOSIS_CODE")
     }
 
     @Throws(TimeoutException::class, InterruptedException::class)
