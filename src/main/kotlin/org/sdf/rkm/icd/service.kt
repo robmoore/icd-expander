@@ -7,7 +7,12 @@ import java.util.UUID
 
 @Service
 class Service {
-    fun expandIcds(icd: String): List<ICD> {
+    fun lookupIcd(icd: String): List<ICD> {
+        val normalizedIcd = icd.replace(".", "")
+        return runStandardSqlQuery("SELECT ICD, Description, CASE WHEN (STARTS_WITH(_TABLE_SUFFIX, '10cm')) THEN 'ICD_10_CM' ELSE 'ICD_9_CM' END as CodeSet FROM `ICD_Codes.icd*` WHERE ICD = '$normalizedIcd' ORDER BY CodeSet, ICD")
+    }
+
+    fun expandIcd(icd: String): List<ICD> {
         val normalizedIcd = icd.replace(".", "")
         return runStandardSqlQuery("SELECT ICD, Description, CASE WHEN (STARTS_WITH(_TABLE_SUFFIX, '10cm')) THEN 'ICD_10_CM' ELSE 'ICD_9_CM' END as CodeSet FROM `ICD_Codes.icd*` WHERE ICD LIKE '$normalizedIcd%' ORDER BY CodeSet, ICD")
     }
