@@ -7,14 +7,13 @@ import java.util.UUID
 
 @Service
 class Service {
-    fun expandIcds(icd: String): Set<String> {
+    fun expandIcds(icd: String): List<ICD> {
         val normalizedIcd = icd.replace(".", "")
-        // TODO Add ICD10 support
-        return runStandardSqlQuery("SELECT DIAGNOSIS_CODE FROM `bigquery-public-data.cms_codes.icd9_diagnoses` WHERE DIAGNOSIS_CODE LIKE '$normalizedIcd%' ORDER BY DIAGNOSIS_CODE")
+        return runStandardSqlQuery("SELECT ICD, Description, CASE WHEN (STARTS_WITH(_TABLE_SUFFIX, '10cm')) THEN 'ICD_10_CM' ELSE 'ICD_9_CM' END as CodeSet FROM `ICD_Codes.icd*` WHERE ICD LIKE '$normalizedIcd%' ORDER BY CodeSet, ICD")
     }
 
     @Throws(TimeoutException::class, InterruptedException::class)
-    private fun runQuery(queryConfig: QueryJobConfiguration): Set<String> {
+    private fun runQuery(queryConfig: QueryJobConfiguration): List<ICD> {
         val bigquery = BigQueryOptions.getDefaultInstance().service
 
         // Create a job ID so that we can safely retry.
@@ -37,14 +36,16 @@ class Service {
         val response = bigquery.getQueryResults(jobId)
         var result = response.result
 
+
         // Print all pages of the results.
-        val results = mutableListOf<String>()
+        val results = mutableListOf<ICD>()
         while (result != null) {
-            results.addAll(result.iterateAll().map { insertDecimal(it[0].stringValue) })
+            results.addAll(result.iterateAll().map { ICD(insertDecimal(it[0].stringValue),
+                    it[1].stringValue, CodeSet.valueOf(it[2].stringValue)) })
             result = result.nextPage
         }
 
-        return results.toSet()
+        return results
     }
 
     private fun insertDecimal(icd: String): String {
@@ -54,7 +55,7 @@ class Service {
     }
 
     @Throws(TimeoutException::class, InterruptedException::class)
-    private fun runStandardSqlQuery(queryString: String): Set<String> {
+    private fun runStandardSqlQuery(queryString: String): List<ICD> {
         val queryConfig = QueryJobConfiguration.newBuilder(queryString)
                 .setUseLegacySql(false)
                 .build()

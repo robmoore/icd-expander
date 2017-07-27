@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 @RestController
 class Controller(val service: Service) {
     @RequestMapping("/icds/{icd}/expand") // https://carbon-web-124017.appspot.com/icds/T83/expand
-    fun expand(@PathVariable(value = "icd") icd: String): Set<String> {
+    fun expand(@PathVariable(value = "icd") icd: String): List<ICD> {
         return service.expandIcds(icd)
     }
 }
