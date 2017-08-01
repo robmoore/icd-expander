@@ -47,7 +47,6 @@ class Service {
                     "  END AS TargetCodeSet,\n" +
                     "  Description,\n" +
                     "  Approximate,\n" +
-                    "  NoMap,\n" +
                     "  Combination,\n" +
                     "  Scenario,\n" +
                     "  ChoiceList\n" +
@@ -68,7 +67,7 @@ class Service {
 
     val icdTransformer = fun(v: List<String>): ICD = ICD(insertDecimal(v[0]), v[1], CodeSet.valueOf(v[2]))
     val gemTransformer = fun(v: List<String>): GEM = GEM(insertDecimal(v[0]), CodeSet.valueOf(v[1]), insertDecimal(v[2]),
-            CodeSet.valueOf(v[3]), v[4], v[5].toBoolean(), v[6].toBoolean(), v[7].toBoolean(), v[8].toInt(), v[9].toInt())
+            CodeSet.valueOf(v[3]), v[4], v[5].toBoolean(), v[6].toBoolean(), v[7].toInt(), v[8].toInt())
 
     @Throws(TimeoutException::class, InterruptedException::class)
     private fun <T> runQuery(queryConfig: QueryJobConfiguration, transformer: (List<String>) -> T): List<T> {

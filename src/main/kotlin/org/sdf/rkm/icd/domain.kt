@@ -7,7 +7,7 @@ enum class CodeSet(val text: String) {
 }
 
 data class GEM(val source: String, val sourceCodeSet: CodeSet, val target: String, val targetCodeSet: CodeSet,
-               val targetDescription: String, val approximate: Boolean, val noMap: Boolean,
-               val combination: Boolean, val scenario: Int, val choiceList: Int)
+               val targetDescription: String, val approximate: Boolean, val combination: Boolean, val scenario: Int,
+               val choiceList: Int)
 
 data class ICD(val icd: String, val description: String, val codeSet: CodeSet)
