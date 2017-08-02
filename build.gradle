@@ -45,6 +45,7 @@ dependencies {
     }
     compile 'com.google.cloud:google-cloud-bigquery:0.20.1-beta'
     compile 'io.github.microutils:kotlin-logging:1.4.6'
+    runtime 'com.google.appengine:appengine-api-1.0-sdk:+'
     testCompile 'org.springframework.boot:spring-boot-starter-test'
 }
 
@@ -67,4 +68,3 @@ task wrapper(type: Wrapper) {
 springBoot {
     mainClass = 'org.sdf.rkm.icd.ApplicationKt'
 }
-

@@ -11,7 +11,7 @@ class Service {
     companion object: KLogging()
 
     // http://www.icd10data.com/ICD10CM/Duplicate_Codes
-    fun lookupIcd(icd: String): List<ICD> {
+    fun lookupIcd(icd: String): List<Icd> {
         val sql = "SELECT\n" +
                 "  ICD,\n" +
                 "  Description,\n" +
@@ -22,7 +22,7 @@ class Service {
         return runStandardSqlQuery(sql, icdTransformer)
     }
 
-    fun expandIcd(icd: String): List<ICD> {
+    fun expandIcd(icd: String): List<Icd> {
         val sql = "SELECT\n" +
                 "  ICD,\n" +
                 "  Description, " +
@@ -33,7 +33,7 @@ class Service {
         return runStandardSqlQuery(sql, icdTransformer)
     }
 
-    fun gemIcd(icd: String): List<GEM> {
+    fun gemIcd(icd: String): List<IcdGem> {
             val sql = "SELECT\n" +
                     "  Source,\n" +
                     "  CASE\n" +
@@ -65,8 +65,8 @@ class Service {
 
     fun normalizeIcd(icd: String) = icd.replace(".", "")
 
-    val icdTransformer = fun(v: List<String>): ICD = ICD(insertDecimal(v[0]), v[1], CodeSet.valueOf(v[2]))
-    val gemTransformer = fun(v: List<String>): GEM = GEM(insertDecimal(v[0]), CodeSet.valueOf(v[1]), insertDecimal(v[2]),
+    val icdTransformer = fun(v: List<String>): Icd = Icd(insertDecimal(v[0]), v[1], CodeSet.valueOf(v[2]))
+    val gemTransformer = fun(v: List<String>): IcdGem = IcdGem(insertDecimal(v[0]), CodeSet.valueOf(v[1]), insertDecimal(v[2]),
             CodeSet.valueOf(v[3]), v[4], v[5].toBoolean(), v[6].toBoolean(), v[7].toInt(), v[8].toInt())
 
     @Throws(TimeoutException::class, InterruptedException::class)
@@ -112,7 +112,7 @@ class Service {
 
     @Throws(TimeoutException::class, InterruptedException::class)
     private fun <T> runStandardSqlQuery(queryString: String, transformer: (List<String>) -> T): List<T> {
-        logger.debug { "Querying $queryString" }
+        logger.debug { "Querying\n$queryString" }
         val queryConfig = QueryJobConfiguration.newBuilder(queryString)
                 .setUseLegacySql(false)
                 .build()
