@@ -13,61 +13,65 @@ class Service {
     // http://www.icd10data.com/ICD10CM/Duplicate_Codes
     // https://aqua.io/codes/icd9/documentation.html
     fun lookupIcd(icd: String): List<Icd> {
-        val sql = "SELECT ICD,\n" +
-                "  Description,\n" +
-                "  CASE WHEN (STARTS_WITH(_TABLE_SUFFIX, '10cm')) THEN 'ICD_10_CM' ELSE 'ICD_9_CM' END as CodeSet\n" +
-                "FROM `ICD_Codes.icd*`\n" +
-                "WHERE ICD = '${normalizeIcd(icd)}'\n" +
-                "ORDER BY CodeSet, ICD"
+        val sql = """
+        SELECT ICD,
+            Description,
+            CASE WHEN (STARTS_WITH(_TABLE_SUFFIX, '10cm')) THEN 'ICD_10_CM' ELSE 'ICD_9_CM' END as CodeSet
+        FROM `ICD_Codes.icd*`
+        WHERE ICD = '${normalizeIcd(icd)}'
+        ORDER BY CodeSet, ICD"""
+
         return runStandardSqlQuery(sql, icdTransformer)
     }
 
     fun expandIcd(icd: String): List<Icd> {
-        val sql = "SELECT ICD,\n" +
-                "  Description, " +
-                "  CASE WHEN (STARTS_WITH(_TABLE_SUFFIX, '10cm')) THEN 'ICD_10_CM' ELSE 'ICD_9_CM' END as CodeSet\n" +
-                "FROM `ICD_Codes.icd*`\n" +
-                "WHERE ICD LIKE '${normalizeIcd(icd)}%'\n" +
-                "ORDER BY CodeSet, ICD"
+        val sql = """
+        SELECT ICD,
+            Description,
+            CASE WHEN (STARTS_WITH(_TABLE_SUFFIX, '10cm')) THEN 'ICD_10_CM' ELSE 'ICD_9_CM' END as CodeSet
+        FROM `ICD_Codes.icd*`
+        WHERE ICD LIKE '${normalizeIcd(icd)}%'
+        ORDER BY CodeSet, ICD"""
+
         return runStandardSqlQuery(sql, icdTransformer)
     }
 
     fun gemIcd(icd: String): List<Gem> {
-        val icdSql = "SELECT Source,\n" +
-                "  CASE\n" +
-                "    WHEN (STARTS_WITH(g._TABLE_SUFFIX, '10gem')) THEN 'ICD_10_CM'\n" +
-                "    ELSE 'ICD_9_CM'\n" +
-                "  END AS SourceCodeSet,\n" +
-                "  Target,\n" +
-                "  CASE\n" +
-                "    WHEN (STARTS_WITH(c._TABLE_SUFFIX, '10cm')) THEN 'ICD_10_CM'\n" +
-                "    ELSE 'ICD_9_CM'\n" +
-                "  END AS TargetCodeSet,\n" +
-                "  Description,\n" +
-                "  Approximate,\n" +
-                "  Combination,\n" +
-                "  Scenario,\n" +
-                "  ChoiceList\n" +
-                "FROM\n" +
-                "  `ICD_Codes.I*` AS g,\n" +
-                "  `ICD_Codes.icd*` AS c\n" +
-                "WHERE\n" +
-                "  Source = '${normalizeIcd(icd)}'\n" +
-                "  AND Target = ICD\n" +
-                "ORDER BY\n" +
-                "  Source,\n" +
-                "  Scenario,\n" +
-                "  ChoiceList"
+        val icdSql = """
+        SELECT Source,
+          CASE
+            WHEN (STARTS_WITH(g._TABLE_SUFFIX, '10gem')) THEN 'ICD_10_CM'
+            ELSE 'ICD_9_CM'
+          END AS SourceCodeSet,
+          Target,
+          CASE
+            WHEN (STARTS_WITH(c._TABLE_SUFFIX, '10cm')) THEN 'ICD_10_CM'
+            ELSE 'ICD_9_CM'
+          END AS TargetCodeSet,
+          Description,
+          Approximate,
+          Combination,
+          Scenario,
+          ChoiceList
+        FROM
+          `ICD_Codes.I*` AS g,
+          `ICD_Codes.icd*` AS c
+        WHERE
+          Source = '${normalizeIcd(icd)}'
+          AND Target = ICD
+        ORDER BY
+          Source,
+          Scenario,
+          ChoiceList"""
+
         val icdGems = runStandardSqlQuery(icdSql, icdGemTransformer)
 
         val icd9Regex = Regex("^(V\\d{2}(\\.\\d{1,2})?|\\d{3}(\\.\\d{1,2})?|E\\d{3}(\\.\\d)?)\$")
         val snomedGems = if (icd9Regex.matchEntire(icd) != null) {
-            val icd9toSnomedSql = "SELECT\n" +
-                    "  ICD_CODE, SNOMED_CID, SNOMED_FSN\n" +
-                    "FROM\n" +
-                    "  `Snomed.ICD9CM_SNOMED_MAP*`\n" +
-                    "WHERE\n" +
-                    "  ICD_CODE = '$icd'"
+            val icd9toSnomedSql = """
+            SELECT ICD_CODE, SNOMED_CID, SNOMED_FSN
+            FROM `Snomed.ICD9CM_SNOMED_MAP*`
+            WHERE ICD_CODE = '$icd'"""
 
             runStandardSqlQuery(icd9toSnomedSql, icd9SnomedGemTransformer)
         } else {
@@ -76,14 +80,10 @@ class Service {
             val extraCriteria = if (icd.length >= 7) {
                 "OR mapTarget = '${icd.substring(0, 7)}?'"
             } else ""
-            val icd10ToSnomedSql = "SELECT\n" +
-                    "  mapTarget,\n" +
-                    "  referencedComponentId,\n" +
-                    "  sctName\n" +
-                    "FROM\n" +
-                    "  `Snomed.tls_Icd10cmHumanReadableMap*`\n" +
-                    "WHERE\n" +
-                    "  mapTarget = '$icd' $extraCriteria" // account for case where ? in 7th digit and need to add to sixth
+            val icd10ToSnomedSql = """
+            SELECT mapTarget, referencedComponentId, sctName
+            FROM `Snomed.tls_Icd10cmHumanReadableMap*`
+            WHERE mapTarget = '$icd' $extraCriteria""" // account for case where ? in 7th digit and need to add to sixth
 
             runStandardSqlQuery(icd10ToSnomedSql, icd10SnomedGemTransformer)
         }
@@ -157,7 +157,7 @@ class Service {
 
     @Throws(TimeoutException::class, InterruptedException::class)
     private fun <T> runStandardSqlQuery(queryString: String, transformer: (List<String>) -> T): List<T> {
-        logger.debug { "Querying\n$queryString" }
+        logger.debug { "Querying $queryString" }
         val queryConfig = QueryJobConfiguration.newBuilder(queryString)
                 .setUseLegacySql(false)
                 .build()
